@@ -2,3 +2,4 @@
 venv
 ideas.txt
 .idea
+utils/__pycache__/
