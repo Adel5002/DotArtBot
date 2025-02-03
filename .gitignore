@@ -3,3 +3,4 @@ venv
 ideas.txt
 .idea
 utils/__pycache__/
+users_images

@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 
 from utils.forms import TakeImageFromUser
 from utils.list_of_commands import commands
+from utils.photo_to_dotart import make_b_and_w_image
 
 load_dotenv()
 
@@ -48,6 +49,7 @@ async def get_photo(message: types.Message, state: FSMContext, bot: Bot) -> None
 
     await state.clear()
     await message.answer('Please wait a second...')
+    make_b_and_w_image(str(message.from_user.id))
 
 
 @dp.message(TakeImageFromUser.image)
