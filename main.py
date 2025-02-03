@@ -1,4 +1,5 @@
 import asyncio
+import base64
 import logging
 import sys
 import os
@@ -9,7 +10,10 @@ from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart, Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import ReplyKeyboardRemove
+from aiogram.types.input_file import BufferedInputFile
 from dotenv import load_dotenv
+from io import BytesIO
+from PIL import Image
 
 from utils.forms import TakeImageFromUser
 from utils.list_of_commands import commands
@@ -34,22 +38,37 @@ async def image_handler(message: types.Message, state: FSMContext) -> None:
         reply_markup=ReplyKeyboardRemove()
     )
 
+
 @dp.message(TakeImageFromUser.image, F.photo)
 async def get_photo(message: types.Message, state: FSMContext, bot: Bot) -> None:
-    await state.update_data(image=message.photo)
+    await state.update_data(image=message.photo[-1].file_id)  # Сохраняем только file_id
     data = await state.get_data()
-    image_id= await bot.get_file(data['image'][-1].file_id)
+
+    # Получаем file_id
+    image_id = await bot.get_file(data['image'])
     image_path = image_id.file_path
 
-    if os.path.exists(f'users_images/{message.from_user.id}'):
-       await bot.download_file(image_path, f'users_images/{message.from_user.id}/{message.message_id}.jpg')
-    else:
-        os.mkdir(f'users_images/{message.from_user.id}')
-        await bot.download_file(image_path, f'users_images/{message.from_user.id}/{message.message_id}.jpg')
+    user_folder = f'users_images/{message.from_user.id}'
+    image_filename = f"{message.message_id}.jpg"
+    image_full_path = os.path.join(user_folder, image_filename)
+
+    # Создаём папку, если её нет
+    os.makedirs(user_folder, exist_ok=True)
+
+    # Скачиваем файл
+    await bot.download_file(image_path, image_full_path)
 
     await state.clear()
     await message.answer('Please wait a second...')
-    make_b_and_w_image(str(message.from_user.id))
+
+    # Обрабатываем изображение
+    decoded_image = base64.b64decode(make_b_and_w_image(str(message.from_user.id)))
+
+    # Открываем изображение корректно
+    image_io = BytesIO(decoded_image)
+
+    await message.answer_photo(BufferedInputFile(image_io.read(), 'file.jpeg'))
+
 
 
 @dp.message(TakeImageFromUser.image)
