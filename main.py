@@ -10,10 +10,8 @@ from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart, Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import ReplyKeyboardRemove
-from aiogram.types.input_file import BufferedInputFile
 from dotenv import load_dotenv
 from io import BytesIO
-from PIL import Image
 
 from utils.forms import TakeImageFromUser
 from utils.list_of_commands import commands
@@ -59,16 +57,16 @@ async def get_photo(message: types.Message, state: FSMContext, bot: Bot) -> None
     await bot.download_file(image_path, image_full_path)
 
     await state.clear()
-    await message.answer('Please wait a second...')
+    await message.answer('Please wait a few seconds...')
+    make_b_and_w_image(str(message.from_user.id))
 
     # Обрабатываем изображение
-    decoded_image = base64.b64decode(make_b_and_w_image(str(message.from_user.id)))
-
-    # Открываем изображение корректно
-    image_io = BytesIO(decoded_image)
-
-    await message.answer_photo(BufferedInputFile(image_io.read(), 'file.jpeg'))
-
+    # decoded_image = base64.b64decode(make_b_and_w_image(str(message.from_user.id)))
+    #
+    # # Открываем изображение корректно
+    # image_io = BytesIO(decoded_image)
+    #
+    # await message.answer_photo(BufferedInputFile(image_io.read(), 'file.jpeg'))
 
 
 @dp.message(TakeImageFromUser.image)
